@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>bhāṣāntara 1.0</title>
+<title>bhāṣāntara</title>
 <style>
 :root{--bg:#faf7f2;--fg:#2a2420;--mut:#7a6f66;--card:#fff;--bd:#e4dccf;--ac:#b4501e;--acfg:#fff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1b1815;--fg:#efe7dc;--mut:#a09486;--card:#26221e;--bd:#3a342d;--ac:#e0824f;--acfg:#1b1815}}
@@ -18,7 +18,7 @@ textarea{width:100%;min-height:150px;padding:12px;border:1px solid var(--bd);bor
 .tg{display:flex;gap:6px 16px;flex-wrap:wrap;align-items:center;background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:10px 14px;margin-top:12px;font-size:.95rem}
 .tg{flex-direction:column;align-items:stretch;gap:10px}
 .cbs{display:flex;gap:8px 16px;align-items:baseline}
-.cbg{display:grid;grid-template-columns:repeat(auto-fill,minmax(125px,1fr));gap:6px 12px;flex:1}
+.cbg{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px 12px;flex:1}
 .opts{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
 .tg b{color:var(--mut);font-weight:600}
 .tg label{cursor:pointer;display:flex;gap:6px;align-items:center}
@@ -34,6 +34,7 @@ button:disabled{opacity:.5;cursor:default}
 .sh{margin-bottom:20px}.sh:last-child{margin-bottom:0}
 .dv{font-family:ui-monospace,"SF Mono",Menlo,Consolas,"DejaVu Sans Mono","Courier New",monospace,"Noto Sans Devanagari","Mangal",sans-serif;white-space:pre-wrap}
 .ia{font-weight:700;white-space:pre-wrap}
+.bn{font-family:ui-monospace,"SF Mono",Menlo,Consolas,"DejaVu Sans Mono","Courier New",monospace,"Noto Sans Bengali","Nirmala UI",sans-serif;white-space:pre-wrap}
 .ta{font-family:ui-monospace,"SF Mono",Menlo,Consolas,"DejaVu Sans Mono","Courier New",monospace,"Noto Sans Tamil","Latha",sans-serif;white-space:pre-wrap}
 .tr{font-style:italic;color:var(--mut)}
 input[type=checkbox]{margin:0;flex:none;width:16px;height:16px;min-width:0;padding:0;accent-color:var(--ac)}
@@ -49,11 +50,14 @@ pre{white-space:pre-wrap;background:var(--card);border:1px solid var(--bd);borde
 <div class="tg">
 <div class="cbs"><b>output:</b><div class="cbg">
 <label><input type="checkbox" id="oD" checked> devanagari</label>
-<label><input type="checkbox" id="oI" checked> iast</label>
 <label><input type="checkbox" id="oT"> tamil</label>
+<label><input type="checkbox" id="oB"> bengali/assamese</label>
+<label><input type="checkbox" id="oI" checked> roman</label>
 <label><input type="checkbox" id="oE" checked> english</label>
 </div></div>
 <div class="opts">
+<label id="rsw">roman <select id="rom"><option value="iast">iast</option><option value="hk">harvard-kyoto</option></select></label>
+<label id="bsw" hidden>bengali/assamese <select id="bst"><option value="bengali">bengali</option><option value="assamese">assamese</option></select></label>
 <label>translator
 <select id="prov"><option value="claude">claude (inside claude only)</option><option value="anthropic">anthropic api key</option><option value="gemini">google gemini api key</option><option value="openrouter">openrouter api key</option></select></label>
 <input id="key" type="password" placeholder="e.g. sk-ant-api03-xxxxxxxxxxxxxxxx…" hidden autocomplete="off">
@@ -94,23 +98,29 @@ function pre(s){return s.normalize('NFC').replace(/[\u200c\u200d]/g,'').replace(
 function danda(s){ // anything between a pair of ॥ gets exactly one space on each side, e.g. ॥१८॥ / ॥ १.२॥ -> " ॥ १८ ॥"
   return s.replace(/[ \t]*॥[ \t]*([^॥\n]*?)[ \t]*॥/g,(m,c)=>c?' ॥ '+c+' ॥':' ॥ ॥').replace(/^[ \t]+/gm,'');
 }
-function iast(s){
+const HC={'क':'k','ख':'kh','ग':'g','घ':'gh','ङ':'G','च':'c','छ':'ch','ज':'j','झ':'jh','ञ':'J','ट':'T','ठ':'Th','ड':'D','ढ':'Dh','ण':'N','त':'t','थ':'th','द':'d','ध':'dh','न':'n','प':'p','फ':'ph','ब':'b','भ':'bh','म':'m','य':'y','र':'r','ल':'l','व':'v','श':'z','ष':'S','स':'s','ह':'h','ळ':'L'};
+const HV={'अ':'a','आ':'A','इ':'i','ई':'I','उ':'u','ऊ':'U','ऋ':'R','ॠ':'RR','ऌ':'lR','ॡ':'lRR','ए':'e','ऐ':'ai','ओ':'o','औ':'au','ऑ':'o','ऍ':'e'};
+const HM={'ा':'A','ि':'i','ी':'I','ु':'u','ू':'U','ृ':'R','ॄ':'RR','ॢ':'lR','ॣ':'lRR','े':'e','ै':'ai','ो':'o','ौ':'au','ॉ':'o','ॅ':'e'};
+const HO={'ं':'M','ः':'H','ँ':'M','ऽ':"'",'ॐ':'oM','।':'/','॥':'//'};
+const TI={C,NK,V,M,O},TH={C:HC,NK:{},V:HV,M:HM,O:HO};
+function rom(s,T){
   s=pre(s);let o='',i=0;
   while(i<s.length){
     const ch=s[i];
-    if(C[ch]){
+    if(T.C[ch]){
       let j=i+1;
-      if(s[j]==='़'){o+=NK[ch]||C[ch];j++}else o+=C[ch];
-      if(s[j]==='्')j++;else if(M[s[j]]){o+=M[s[j]];j++}else o+='a';
+      if(s[j]==='़'){o+=T.NK[ch]||T.C[ch];j++}else o+=T.C[ch];
+      if(s[j]==='्')j++;else if(T.M[s[j]]){o+=T.M[s[j]];j++}else o+='a';
       i=j;
-    }else if(V[ch]){o+=V[ch];i++}
-    else if(O[ch]){o+=O[ch];i++}
+    }else if(T.V[ch]){o+=T.V[ch];i++}
+    else if(T.O[ch]){o+=T.O[ch];i++}
     else if(DG.includes(ch)){o+=DG.indexOf(ch);i++}
     else if(ch==='़'||ch==='्'){i++}
     else{o+=ch;i++}
   }
   return o.replace(/[ \t]+\n/g,'\n').replace(/\/\/ *([^\/\n]*?) *\/\//g,(m,c)=>c?'// '+c+' //':'// //');
 }
+const iast=s=>rom(s,TI),hk=s=>rom(s,TH);
 function tamil(s,sup){
   s=pre(s);let o='',i=0;
   while(i<s.length){
@@ -130,6 +140,20 @@ function tamil(s,sup){
   }
   return o;
 }
+const BO={'ऍ':'এ','ऑ':'ও','ॉ':'ো','ॅ':'ে','ॐ':'ওঁ','ळ':'ল'};
+function bengali(s,as){
+  s=pre(s);let o='';
+  for(const ch of s){
+    const c=ch.codePointAt(0);
+    if(ch==='व')o+=as?'ৱ':'ব';
+    else if(ch==='र')o+=as?'ৰ':'র';
+    else if(BO[ch])o+=BO[ch];
+    else if((c>=0x901&&c<=0x963)||(c>=0x966&&c<=0x96f))o+=String.fromCodePoint(c+0x80);
+    else if(/[0-9]/.test(ch))o+=String.fromCodePoint(0x9e6+(+ch));
+    else o+=ch;
+  }
+  return o;
+}
 function split(t){
   return danda(t.trim()).split(/\n\s*\n/).flatMap(b=>b.split(/(?<=॥[^॥\n]*॥)[ \t]*\n/)).map(x=>x.trim()).filter(Boolean);
 }
@@ -137,14 +161,15 @@ const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 const EX='नवावरणसम्पूज्या नवाक्षरमनुस्तुता ।\nनवलावण्यरूपाढ्या ज्वलद्द्वात्रिंशतायुधा ॥१३॥';
 let items=[],trs=null,md='';
 function render(){
-  $('tsw').hidden=!$('oT').checked;
+  $('tsw').hidden=!$('oT').checked;$('bsw').hidden=!$('oB').checked;$('rsw').hidden=!$('oI').checked;
   if(!items.length)return;
-  const oD=$('oD').checked,oI=$('oI').checked,oT=$('oT').checked,oE=$('oE').checked,sup=$('tst').value==='sup';
+  const oD=$('oD').checked,oI=$('oI').checked,oT=$('oT').checked,oE=$('oE').checked,oB=$('oB').checked,sup=$('tst').value==='sup',as=$('bst').value==='assamese',rv=$('rom').value;
   const blocks=items.map((d,i)=>{
     const p=[];
     if(oD)p.push({c:'dv',m:d,h:d});
     if(oT){const a=tamil(d,sup);p.push({c:'ta',m:a,h:a})}
-    if(oI){const a=iast(d);p.push({c:'ia',m:'**'+a+'**',h:a})}
+    if(oB){const a=bengali(d,as);p.push({c:'bn',m:a,h:a})}
+    if(oI){const a=rv==='hk'?hk(d):iast(d);p.push({c:'ia',m:'**'+a+'**',h:a})}
     if(oE&&trs&&trs[i]){let t=trs[i].replace(/^\*+|\*+$/g,'').trim();if(t&&!/[.!?…,;:]$/.test(t))t+='.';p.push({c:'tr',m:'*'+t+'*',h:t})}
     return p;
   });
@@ -152,7 +177,7 @@ function render(){
   $('res').innerHTML='<div class="out">'+blocks.map(p=>'<div class="sh">'+p.map(x=>'<div class="'+x.c+'">'+esc(x.h)+'</div>').join('')+'</div>').join('')+'</div>';
   $('raw').textContent=md;$('rawd').hidden=false;$('cp').disabled=!md;
 }
-['oD','oI','oT','oE','tst'].forEach(id=>$(id).addEventListener('change',()=>{
+['oD','oI','oT','oB','oE','tst','bst','rom'].forEach(id=>$(id).addEventListener('change',()=>{
   render();
   if(id==='oE'&&$('oE').checked&&items.length&&!trs)$('st').textContent='click “transliterate & translate” to generate the translation.';
 }));
