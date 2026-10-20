@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>bhāṣāntara</title>
+<title>bhāṣāntara 1.0</title>
 <style>
 :root{--bg:#faf7f2;--fg:#2a2420;--mut:#7a6f66;--card:#fff;--bd:#e4dccf;--ac:#b4501e;--acfg:#fff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1b1815;--fg:#efe7dc;--mut:#a09486;--card:#26221e;--bd:#3a342d;--ac:#e0824f;--acfg:#1b1815}}
@@ -161,7 +161,7 @@ function syncTh(){$('th').textContent=curTheme()==='dark'?'light':'dark'}
 $('th').onclick=()=>{document.documentElement.dataset.theme=curTheme()==='dark'?'light':'dark';syncTh()};
 syncTh();
 function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
-const PV={anthropic:{ph:'e.g. sk-ant-api03-xxxxxxxxxxxxxxxx…',model:'claude-sonnet-5-5'},gemini:{ph:'e.g. AIzaSyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',model:'gemini-2.5-flash'},openrouter:{ph:'e.g. sk-or-v1-xxxxxxxxxxxxxxxxxxxxxxxx',model:'google/gemini-2.5-flash'}};
+const PV={anthropic:{ph:'e.g. sk-ant-api03-xxxxxxxxxxxxxxxx…',model:'claude-sonnet-5-5'},gemini:{ph:'e.g. AIzaSyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',model:'gemini-3.8-flash'},openrouter:{ph:'e.g. sk-or-v1-xxxxxxxxxxxxxxxxxxxxxxxx',model:'google/gemini-2.5-flash'}};
 $('prov').value=ls('bh_prov')||'claude';if(!$('prov').value)$('prov').value='claude';
 function syncPv(){
   const pv=$('prov').value,c=PV[pv];
