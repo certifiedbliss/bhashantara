@@ -3,13 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Sanskrit&display=swap">
 <title>bhāṣāntara</title>
 <style>
 :root{--bg:#faf7f2;--fg:#2a2420;--mut:#7a6f66;--card:#fff;--bd:#e4dccf;--ac:#b4501e;--acfg:#fff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1b1815;--fg:#efe7dc;--mut:#a09486;--card:#26221e;--bd:#3a342d;--ac:#e0824f;--acfg:#1b1815}}
 :root[data-theme="dark"]{--bg:#1b1815;--fg:#efe7dc;--mut:#a09486;--card:#26221e;--bd:#3a342d;--ac:#e0824f;--acfg:#1b1815}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 ui-monospace,"SF Mono",Menlo,Consolas,"DejaVu Sans Mono","Courier New",monospace,"Noto Sans Devanagari","Noto Sans Tamil",sans-serif}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 ui-monospace,"SF Mono",Menlo,Consolas,"DejaVu Sans Mono","Courier New",monospace,"Tiro Devanagari Sanskrit","Noto Sans Devanagari","Noto Sans Tamil",sans-serif}
 .app{display:grid;grid-template-columns:220px minmax(0,1fr);min-height:100vh}
 aside{border-right:1px solid var(--bd);background:var(--card);padding:12px 10px;position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column}
 #plist{flex:1}
@@ -34,7 +37,7 @@ main{width:100%;max-width:1000px;margin:0;padding:14px 20px 28px}
 @media (max-width:760px){.app{grid-template-columns:1fr}aside{position:static;height:auto;max-height:230px;border-right:0;border-bottom:1px solid var(--bd)}}
 h1{font-size:1.6rem;margin:0;font-weight:500;letter-spacing:-.01em}
 p.s{color:var(--mut);margin:0 0 10px;font-size:.92rem}
-textarea{width:100%;min-height:110px;padding:12px;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--fg);font:1.1rem/1.7 ui-monospace,"SF Mono",Menlo,Consolas,"DejaVu Sans Mono","Courier New",monospace,"Noto Sans Devanagari","Mangal",sans-serif;resize:vertical}
+textarea{width:100%;min-height:110px;padding:12px;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--fg);font:1.1rem/1.7 ui-monospace,"SF Mono",Menlo,Consolas,"DejaVu Sans Mono","Courier New",monospace,"Tiro Devanagari Sanskrit","Noto Sans Devanagari","Mangal",sans-serif;resize:vertical}
 .row{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;align-items:center}
 .tg{display:flex;gap:6px 16px;flex-wrap:wrap;align-items:center;background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:8px 12px;margin-top:8px;font-size:.95rem}
 .tg{flex-direction:column;align-items:stretch;gap:10px}
@@ -56,7 +59,7 @@ button:disabled{opacity:.5;cursor:default}
 .sh div:focus{outline:1px dashed var(--ac);outline-offset:3px}
 .hint{color:var(--mut);font-size:.82rem;margin-top:10px}
 .sh{margin-bottom:14px}.sh:last-child{margin-bottom:0}
-.dv{font-family:ui-monospace,"SF Mono",Menlo,Consolas,"DejaVu Sans Mono","Courier New",monospace,"Noto Sans Devanagari","Mangal",sans-serif;white-space:pre-wrap}
+.dv{font-family:"Tiro Devanagari Sanskrit","Noto Sans Devanagari","Mangal",serif;font-size:1.08em;white-space:pre-wrap}
 .ia{font-weight:700;white-space:pre-wrap}
 .bn{font-family:ui-monospace,"SF Mono",Menlo,Consolas,"DejaVu Sans Mono","Courier New",monospace,"Noto Sans Bengali","Nirmala UI",sans-serif;white-space:pre-wrap}
 .ta{font-family:ui-monospace,"SF Mono",Menlo,Consolas,"DejaVu Sans Mono","Courier New",monospace,"Noto Sans Tamil","Latha",sans-serif;white-space:pre-wrap}
@@ -104,6 +107,7 @@ pre{white-space:pre-wrap;background:var(--card);border:1px solid var(--bd);borde
 <input id="fn" type="text" placeholder="file name" maxlength="80" autocomplete="off" spellcheck="false" title="name for the .md and .txt downloads (extension is added for you)">
 <button id="dm" disabled>download .md</button>
 <button id="dt" disabled>download .txt</button>
+<button id="de" disabled>download .epub</button>
 </div>
 <div id="st"></div>
 <div id="res"></div>
@@ -203,7 +207,7 @@ function build(){
     if(oT)add('ta',sup?'s':'p',tamil(d,sup));
     if(oB)add('bn',as?'a':'b',bengali(d,as));
     if(oI)add('ia',rv,rv==='hk'?hk(d):iast(d));
-    if(oE&&trs&&trs[i]){let t=trs[i].replace(/^\*+|\*+$/g,'').trim();if(t&&!/[.!?…,;:]$/.test(t))t+='.';add('tr','',t)}
+    if(oE&&trs&&trs[i]){let t=trs[i].replace(/^\*+|\*+$/g,'').trim().replace(/\b(?:Om|OM|Aum|AUM)\b(?:[.,;:!](?=\s))?/g,'oṁ');if(t&&!/[.!?…,;:]$/.test(t))t+='.';add('tr','',t)}
     return p;
   });
 }
@@ -211,7 +215,7 @@ const mk=(c,t)=>c==='ia'?'**'+t+'**':c==='tr'?'*'+t+'*':t;
 function sync(blocks){
   md=blocks.map(p=>p.map(x=>mk(x.c,x.t)).join('\n')).join('\n\n');
   $('raw').textContent=md;$('rawd').hidden=false;
-  ['cp','dm','dt'].forEach(id=>$(id).disabled=!md);
+  ['cp','dm','dt','de'].forEach(id=>$(id).disabled=!md);
 }
 function render(){
   $('tsw').hidden=!$('oT').checked;$('bsw').hidden=!$('oB').checked;$('rsw').hidden=!$('oI').checked;
@@ -235,12 +239,117 @@ async function save(name,data){
     return;
   }
   const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([data],{type:name.endsWith('.txt')?'text/plain':'text/markdown'}));
+  a.href=URL.createObjectURL(new Blob([data],{type:name.endsWith('.epub')?'application/epub+zip':name.endsWith('.txt')?'text/plain':'text/markdown'}));
   a.download=name;document.body.appendChild(a);a.click();a.remove();
   setTimeout(()=>URL.revokeObjectURL(a.href),2000);
   $('st').textContent='downloaded '+name+'.';
 }
-const fname=ext=>{const n=($('fn').value||'').trim().replace(/\.(md|txt)$/i,'').replace(/[\\\/:*?"<>|\u0000-\u001f]/g,'').replace(/^\.+/,'').trim();return (n||'bhashantara')+'.'+ext};
+// ---- epub export (hand-rolled zip, no libraries) ----
+const enc=new TextEncoder();
+const CRC=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+const crc32=b=>{let c=~0;for(let i=0;i<b.length;i++)c=CRC[(c^b[i])&255]^(c>>>8);return ~c>>>0};
+function zipStore(files){
+  const parts=[],cen=[];let off=0;
+  const d=new Date(),time=(d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1),date=((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate();
+  for(const f of files){
+    const nm=enc.encode(f.name),data=f.data,crc=crc32(data);
+    const lh=new DataView(new ArrayBuffer(30));
+    lh.setUint32(0,0x04034b50,true);lh.setUint16(4,20,true);lh.setUint16(6,0x0800,true);lh.setUint16(10,time,true);lh.setUint16(12,date,true);lh.setUint32(14,crc,true);lh.setUint32(18,data.length,true);lh.setUint32(22,data.length,true);lh.setUint16(26,nm.length,true);
+    parts.push(new Uint8Array(lh.buffer),nm,data);
+    const ch=new DataView(new ArrayBuffer(46));
+    ch.setUint32(0,0x02014b50,true);ch.setUint16(4,20,true);ch.setUint16(6,20,true);ch.setUint16(8,0x0800,true);ch.setUint16(12,time,true);ch.setUint16(14,date,true);ch.setUint32(16,crc,true);ch.setUint32(20,data.length,true);ch.setUint32(24,data.length,true);ch.setUint16(28,nm.length,true);ch.setUint32(42,off,true);
+    cen.push(new Uint8Array(ch.buffer),nm);
+    off+=30+nm.length+data.length;
+  }
+  const csize=cen.reduce((a,b)=>a+b.length,0),e=new DataView(new ArrayBuffer(22));
+  e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,csize,true);e.setUint32(16,off,true);
+  const all=parts.concat(cen,[new Uint8Array(e.buffer)]),out=new Uint8Array(all.reduce((a,b)=>a+b.length,0));
+  let q=0;for(const b of all){out.set(b,q);q+=b.length}
+  return out;
+}
+async function ebFonts(){
+  const files=[];let faces='',i=0;
+  for(const [fam,keep] of [['EB+Garamond:ital,wght@0,400..700;1,400..700',['latin','latin-ext']],['Tiro+Devanagari+Sanskrit',['devanagari']]]){
+    const css=await(await fetch('https://fonts.googleapis.com/css2?family='+fam+'&display=swap')).text(),re=/\/\*\s*([\w-]+)\s*\*\/\s*(@font-face\s*\{[^}]*\})/g;let m;
+    while((m=re.exec(css))){
+      if(!keep.includes(m[1]))continue;
+      const u=/url\((https:[^)]+)\)/.exec(m[2]);if(!u)continue;
+      const data=new Uint8Array(await(await fetch(u[1])).arrayBuffer()),href='fonts/f'+(i++)+'.woff2';
+      files.push({name:'OEBPS/'+href,href,data});
+      faces+=m[2].replace(u[0],'url("'+href+'")')+'\n';
+    }
+  }
+  if(!files.length)throw 0;
+  return {files,faces};
+}
+const xe=t=>t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const strip=t=>t.replace(/^[॥\/\s]+|[॥\/\s]+$/g,'');
+// chapter protocol: a block that is just "॥ अथ … ॥" starts a chapter (heading);
+// a block that is just "॥ … इति … ॥" ends one, so whatever follows starts a new chapter.
+function blockKind(t){
+  const x=t.trim();
+  if(!x.startsWith('॥')||!x.endsWith('॥')||x.includes('\n')||(x.match(/॥/g)||[]).length!==2)return '';
+  const c=x.slice(1,-1).trim();
+  if(/^अथ(\s|$)/.test(c))return 'start';
+  if(/इति/.test(c))return 'end';
+  return '';
+}
+async function blackCover(){
+  try{
+    const c=document.createElement('canvas');c.width=1200;c.height=1800;
+    const g=c.getContext('2d');g.fillStyle='#000';g.fillRect(0,0,c.width,c.height);
+    const b=await new Promise(r=>c.toBlob(r,'image/png'));
+    return new Uint8Array(await b.arrayBuffer());
+  }catch(e){return null}
+}
+async function makeEpub(){
+  let fonts={files:[],faces:''},embedded=true;
+  try{fonts=await ebFonts()}catch(e){embedded=false}
+  const cover=await blackCover();
+  const title=($('fn').value||'').trim()||'bhāṣāntara',as=$('bst').value==='assamese';
+  const LANG={dv:'sa',ta:'ta',bn:as?'as':'bn',ia:'sa-Latn',tr:'en'};
+  const pH=(x,tx)=>{let t=xe(tx).replace(/\n/g,'<br/>');if(x.c==='ia')t='<strong>'+t+'</strong>';return '<p class="'+x.c+'" xml:lang="'+LANG[x.c]+'" lang="'+LANG[x.c]+'">'+t+'</p>'};
+  const sec=p=>'<section class="sh">\n'+p.map(x=>pH(x,x.t)).join('\n')+'\n</section>';
+  const headH=p=>{const f=p[0];return '<header class="chh">\n<h1 class="'+f.c+'" xml:lang="'+LANG[f.c]+'" lang="'+LANG[f.c]+'">'+xe(strip(f.t))+'</h1>\n'+p.slice(1).map(x=>pH(x,x.c==='tr'?strip(x.t).replace(/\.$/,''):strip(x.t))).join('\n')+'\n</header>'};
+  // split into chapters
+  const chs=[];let cur=null,next=false;
+  build().forEach((p,i)=>{
+    const k=blockKind(items[i]||'');
+    if(k==='start'&&p.length){cur={head:p,title:strip(p[0].t),secs:[]};chs.push(cur);next=false;return}
+    if(!cur||next){cur={head:null,title:'',secs:[]};chs.push(cur);next=false}
+    cur.secs.push(p);
+    if(k==='end')next=true;
+  });
+  chs.forEach((c,i)=>{if(!c.title)c.title=chs.length===1?title:'chapter '+(i+1)});
+  const xml='<?xml version="1.0" encoding="UTF-8"?>\n',ns='xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"';
+  const uid='urn:uuid:'+(crypto.randomUUID?crypto.randomUUID():'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==='x'?r:(r&3|8)).toString(16)}));
+  const css=fonts.faces+'html,body{margin:0;padding:0}\nbody{font-family:"EB Garamond",Garamond,"Times New Roman",serif;line-height:1.5;margin:1em}\nh1{font-size:1.4em;font-weight:600;margin:0 0 1em;text-align:center}\n.chh{margin:0 0 1.6em}\n.chh h1{font-size:1em;font-weight:normal;margin:0;line-height:1.5}\n.chh{text-align:center}\n.sh{margin:0 0 1.6em;page-break-inside:avoid}\np{margin:0;padding:0;text-indent:0;line-height:1.5}\n.ia,.ia strong{font-weight:bold}\n.tr{font-style:normal;font-size:.85em;line-height:1.765}\n.dv{font-family:"Tiro Devanagari Sanskrit","Noto Serif Devanagari","Noto Sans Devanagari",serif}\n';
+  const mod=new Date().toISOString().replace(/\.\d+Z$/,'Z');
+  const opf=xml+'<package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="uid" xml:lang="en">\n<metadata xmlns:dc="http://purl.org/dc/elements/1.1/">\n<dc:identifier id="uid">'+uid+'</dc:identifier>\n<dc:title>'+xe(title)+'</dc:title>\n<dc:language>sa</dc:language>\n<dc:creator>kālikā dāsar</dc:creator>\n<meta property="dcterms:modified">'+mod+'</meta>\n'+(cover?'<meta name="cover" content="cover-img"/>\n':'')+'</metadata>\n<manifest>\n<item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>\n<item id="css" href="style.css" media-type="text/css"/>\n'+(cover?'<item id="cover-img" href="cover.png" media-type="image/png" properties="cover-image"/>\n':'')+chs.map((c,i)=>'<item id="ch'+i+'" href="chapter-'+(i+1)+'.xhtml" media-type="application/xhtml+xml"/>').join('\n')+'\n'+fonts.files.map((f,i)=>'<item id="f'+i+'" href="'+f.href+'" media-type="font/woff2"/>').join('\n')+'\n</manifest>\n<spine>\n'+chs.map((c,i)=>'<itemref idref="ch'+i+'"/>').join('\n')+'\n</spine>\n</package>\n';
+  const page=(t,inner)=>xml+'<!DOCTYPE html>\n<html '+ns+' xml:lang="en" lang="en"><head><meta charset="utf-8"/><title>'+xe(t)+'</title><link rel="stylesheet" type="text/css" href="style.css"/></head><body>\n'+inner+'\n</body></html>\n';
+  const files=[
+    {name:'mimetype',data:enc.encode('application/epub+zip')},
+    {name:'META-INF/container.xml',data:enc.encode(xml+'<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>\n')},
+    {name:'OEBPS/content.opf',data:enc.encode(opf)},
+    {name:'OEBPS/nav.xhtml',data:enc.encode(xml+'<!DOCTYPE html>\n<html '+ns+' xml:lang="en" lang="en"><head><meta charset="utf-8"/><title>'+xe(title)+'</title></head><body><nav epub:type="toc" id="toc"><h1>contents</h1><ol>'+chs.map((c,i)=>'<li><a href="chapter-'+(i+1)+'.xhtml">'+xe(c.title)+'</a></li>').join('')+'</ol></nav></body></html>\n')},
+    {name:'OEBPS/style.css',data:enc.encode(css)}
+  ].concat(chs.map((c,i)=>({name:'OEBPS/chapter-'+(i+1)+'.xhtml',data:enc.encode(page(c.title,(c.head?headH(c.head):'<h1>'+xe(c.title)+'</h1>')+'\n'+c.secs.map(sec).join('\n')))})));
+  if(cover)files.push({name:'OEBPS/cover.png',data:cover});
+  fonts.files.forEach(f=>files.push({name:f.name,data:f.data}));
+  return {bytes:zipStore(files),embedded,chapters:chs.length};
+}
+$('de').onclick=async()=>{
+  if(!md)return;
+  $('de').disabled=true;$('st').textContent='building epub…';
+  try{
+    const {bytes,embedded,chapters}=await makeEpub();
+    await save(fname('epub'),bytes);
+    if(chapters>1)$('st').textContent+=' ('+chapters+' chapters)';
+    if(!embedded)$('st').textContent+=' eb garamond and tiro devanagari sanskrit could not be embedded (needs an internet connection and the downloaded file); the epub asks for them and falls back to the reader\'s own fonts.';
+  }catch(e){$('st').textContent='epub failed.'}
+  $('de').disabled=!md;
+};
+const fname=ext=>{const n=($('fn').value||'').trim().replace(/\.(md|txt|epub)$/i,'').replace(/[\\\/:*?"<>|\u0000-\u001f]/g,'').replace(/^\.+/,'').trim();return (n||'bhashantara')+'.'+ext};
 $('dm').onclick=()=>save(fname('md'),md+'\n');
 $('dt').onclick=()=>save(fname('txt'),rawText()+'\n');
 ['oD','oI','oT','oB','oE','tst','bst','rom'].forEach(id=>$(id).addEventListener('change',()=>{
@@ -272,7 +381,7 @@ const runGo=async()=>{
   if(!$('oE').checked){$('st').textContent='done.';$('go').disabled=false;return}
   const pv=$('prov').value;
   $('st').textContent='translating…';
-  const prompt='Translate each Sanskrit shloka below into English, in the style of traditional stotra translations: literal and faithful, with clarifying parentheticals where helpful (e.g. "(of the Śrī Cakra)"), and epithets separated by semicolons, each starting with "She who"/"He who" etc. when the original is an epithet list. Example for "नवावरणसम्पूज्या नवाक्षरमनुस्तुता । नवलावण्यरूपाढ्या ज्वलद्द्वात्रिंशतायुधा ॥ १३ ॥": She who is worshipped through the nine enclosures (of the Śrī Cakra); she who is praised through the nine syllable mantra (Navākṣarī); she who is endowed with a form of ever-fresh beauty; she who bears thirty-two blazing weapons\n\nPunctuate so the translations read continuously across consecutive shlokas: end a translation with a period when its sentence is complete, but end it with a comma or semicolon when the sentence or list (e.g. a nāmāvalī or stotra epithet list) continues into the next shloka. Return ONLY a JSON array of strings, one translation per shloka, in order, no markdown, no asterisks.\n\nShlokas:\n'+items.map((d,i)=>(i+1)+'. '+d.replace(/\n/g,' ')).join('\n');
+  const prompt='Translate each Sanskrit shloka below into English, in the style of traditional stotra translations: literal and faithful, with clarifying parentheticals where helpful (e.g. "(of the Śrī Cakra)"), and epithets separated by semicolons, each starting with "She who"/"He who" etc. when the original is an epithet list. Example for "नवावरणसम्पूज्या नवाक्षरमनुस्तुता । नवलावण्यरूपाढ्या ज्वलद्द्वात्रिंशतायुधा ॥ १३ ॥": She who is worshipped through the nine enclosures (of the Śrī Cakra); she who is praised through the nine syllable mantra (Navākṣarī); she who is endowed with a form of ever-fresh beauty; she who bears thirty-two blazing weapons\n\nPunctuate so the translations read continuously across consecutive shlokas: end a translation with a period when its sentence is complete, but end it with a comma or semicolon when the sentence or list (e.g. a nāmāvalī or stotra epithet list) continues into the next shloka. Render the syllable ॐ as "oṁ" (lowercase, with no period or comma after it) and carry on with a capitalized next word, e.g. "oṁ Of this Śrī Kīlaka mantra…". Return ONLY a JSON array of strings, one translation per shloka, in order, no markdown, no asterisks.\n\nShlokas:\n'+items.map((d,i)=>(i+1)+'. '+d.replace(/\n/g,' ')).join('\n');
   const parse=t=>{const a=JSON.parse((t||'').replace(/```json|```/g,'').trim());if(!Array.isArray(a))throw 0;return a.map(String)};
   try{
     if(pv==='claude'){
@@ -322,7 +431,7 @@ function saveNow(){
   storeAll([proj].concat(loadAll().filter(x=>x.id!==curId)));paintList();
 }
 const schedule=()=>{clearTimeout(saveT);saveT=setTimeout(saveNow,700)};
-function clearOut(){$('res').innerHTML='';$('raw').textContent='';$('rawd').hidden=true;['cp','dm','dt'].forEach(id=>$(id).disabled=true)}
+function clearOut(){$('res').innerHTML='';$('raw').textContent='';$('rawd').hidden=true;['cp','dm','dt','de'].forEach(id=>$(id).disabled=true)}
 function openProj(id){
   const p=loadAll().find(x=>x.id===id);if(!p)return;
   clearTimeout(saveT);
