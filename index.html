@@ -92,6 +92,7 @@ pre{white-space:pre-wrap;background:var(--card);border:1px solid var(--bd);borde
 <div class="opts">
 <label id="rsw">roman <select id="rom"><option value="iast">iast</option><option value="hk">harvard-kyoto</option></select></label>
 <label id="bsw" hidden>bengali/assamese <select id="bst"><option value="bengali">bengali</option><option value="assamese">assamese</option></select></label>
+<label>translations <select id="tmode"><option value="gen">translate</option><option value="find">find existing translations</option></select></label>
 <label>translator
 <select id="prov"><option value="claude">claude (inside claude only)</option><option value="anthropic">anthropic api key</option><option value="gemini">google gemini api key</option><option value="openai">openai api key</option><option value="openrouter">openrouter api key</option></select></label>
 <input id="key" type="password" placeholder="e.g. sk-ant-api03-xxxxxxxxxxxxxxxx…" hidden autocomplete="off">
@@ -273,7 +274,7 @@ function build(){
     if(oT)add('ta',sup?'s':'p',tamil(d,sup));
     if(oB)add('bn',as?'a':'b',bengali(d,as));
     if(oI)add('ia',rv,rv==='hk'?hk(d):iast(d));
-    if(oE&&trs&&trs[i]){let t=trs[i].replace(/^\*+|\*+$/g,'').trim().replace(/\b(?:Om|OM|Aum|AUM)\b(?:[.,;:!](?=\s))?/g,'oṁ');if(t&&!/[.!?…,;:]$/.test(t))t+='.';add('tr','',t)}
+    if(oE&&trs&&trs[i]){let t=trs[i].replace(/^\*+|\*+$/g,'').trim().replace(/\b(?:Om|OM|Aum|AUM)\b(?:[.,;:!](?=\s))?/g,'oṁ');if(t&&!/[.!?…,;:\]]$/.test(t))t+='.';add('tr','',t)}
     return p;
   });
 }
@@ -448,9 +449,21 @@ const runGo=async()=>{
   const pv=$('prov').value;
   $('st').textContent='translating…';
   const prompt='Translate each Sanskrit shloka below into English, in the style of traditional stotra translations: literal and faithful, with clarifying parentheticals where helpful (e.g. "(of the Śrī Cakra)"), and epithets separated by semicolons, each starting with "She who"/"He who" etc. when the original is an epithet list. Example for "नवावरणसम्पूज्या नवाक्षरमनुस्तुता । नवलावण्यरूपाढ्या ज्वलद्द्वात्रिंशतायुधा ॥ १३ ॥": She who is worshipped through the nine enclosures (of the Śrī Cakra); she who is praised through the nine syllable mantra (Navākṣarī); she who is endowed with a form of ever-fresh beauty; she who bears thirty-two blazing weapons\n\nPunctuate so the translations read continuously across consecutive shlokas: end a translation with a period when its sentence is complete, but end it with a comma or semicolon when the sentence or list (e.g. a nāmāvalī or stotra epithet list) continues into the next shloka. Render the syllable ॐ as "oṁ" (lowercase, with no period or comma after it) and carry on with a capitalized next word, e.g. "oṁ Of this Śrī Kīlaka mantra…". Return ONLY a JSON array of strings, one translation per shloka, in order, no markdown, no asterisks.\n\nShlokas:\n'+items.map((d,i)=>(i+1)+'. '+d.replace(/\n/g,' ')).join('\n');
-  const parse=t=>{const a=JSON.parse((t||'').replace(/```json|```/g,'').trim());if(!Array.isArray(a))throw 0;return a.map(String)};
+  let raw='',phase='';
+  const parse=t=>{phase='parse';raw=t||'';const x=raw.replace(/```json|```/g,'').trim(),p=x.indexOf('['),q=x.lastIndexOf(']');const a=JSON.parse(p>=0&&q>p?x.slice(p,q+1):x);if(!Array.isArray(a))throw 0;return a.map(String)};
+  const find=$('tmode').value==='find';let work='';
+  const fprompt='The input is one or more consecutive Sanskrit verses (possibly with headings or colophons). Do this: (1) identify the work and section they come from and how its verses are numbered; (2) use web search to find existing published English translations of that work, preferring public-domain or openly licensed ones (for example wikisource, sacred-texts, archive.org, wisdomlib); (3) for EACH input item give the translation of that exact verse from such a source, matching by the verse\'s content, not just by its position. Only copy wording from translations that are in the public domain or openly licensed. For a translation that is still under copyright, do not copy its wording: write your own faithful translation of that verse and set "source" to null. If you cannot identify the work, translate each verse yourself and set "source" to null. Keep each translation to that verse only, with no commentary. Style: render the syllable ॐ as "oṁ" (lowercase, no period or comma after it) and carry on with a capitalized next word; end a translation with a period when its sentence is complete, or with a comma or semicolon when the sentence or list continues into the next verse. Return ONLY a JSON object, no markdown: {"work":"name of the work and section, or null","verses":[{"n":1,"translation":"...","source":"translator, publication or site (license), or null"}]} with one entry per input item, in order.\n\nItems:\n'+items.map((d,i)=>(i+1)+'. '+d.replace(/\n/g,' ')).join('\n');
+  const parseFind=t=>{
+    phase='parse';raw=t||'';const x=raw.replace(/```json|```/g,'').trim();let o;
+    try{o=JSON.parse(x)}catch(e){const p=x.indexOf('{'),q=x.lastIndexOf('}');if(p<0||q<=p)throw 0;o=JSON.parse(x.slice(p,q+1))}
+    const v=o.verses||[];work=o.work&&o.work!=='null'?String(o.work):'';
+    return items.map((_,i)=>{const e=v.find(y=>+y.n===i+1)||v[i];if(!e||!e.translation)return '';return String(e.translation).trim()+(e.source&&e.source!=='null'?' ['+String(e.source).trim()+']':' [machine translation]')});
+  };
+  const P=find?fprompt:prompt;
+  if(find)$('st').textContent='searching for existing translations… this can take a minute.';
   try{
     if(pv==='claude'){
+      if(find){$('st').textContent='finding existing translations needs web search — pick the anthropic, gemini, openai or openrouter translator.';$('go').disabled=false;return}
       let sample=null;
       try{sample=await claude.use('sample')}catch(e){}
       if(!sample){$('st').textContent='“claude” only works when this page is opened inside claude — pick another translator.';$('go').disabled=false;return}
@@ -458,20 +471,27 @@ const runGo=async()=>{
     }else{
       const key=($('key').value||'').trim(),model=($('model').value||'').trim()||PV[pv].model;
       if(!key){$('st').textContent='enter your '+pv+' api key first ('+PV[pv].ph.toLowerCase()+').';$('go').disabled=false;return}
-      let res,text;
-      if(pv==='anthropic')res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model,max_tokens:4000,messages:[{role:'user',content:prompt}]})});
-      else if(pv==='gemini')res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(model)+':generateContent',{method:'POST',headers:{'content-type':'application/json','x-goog-api-key':key},body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})});
-      else res=await fetch(pv==='openai'?'https://api.openai.com/v1/chat/completions':'https://openrouter.ai/api/v1/chat/completions',{method:'POST',headers:{'content-type':'application/json','authorization':'Bearer '+key},body:JSON.stringify({model,messages:[{role:'user',content:prompt}]})});
+      const J={'content-type':'application/json'};let res,text;
+      if(pv==='anthropic')res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{...J,'x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model,max_tokens:find?8000:4000,messages:[{role:'user',content:P}],...(find?{tools:[{type:'web_search_20250305',name:'web_search',max_uses:8}]}:{})})});
+      else if(pv==='gemini')res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(model)+':generateContent',{method:'POST',headers:{...J,'x-goog-api-key':key},body:JSON.stringify({contents:[{parts:[{text:P}]}],...(find?{tools:[{google_search:{}}]}:{})})});
+      else if(pv==='openai'&&find)res=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{...J,authorization:'Bearer '+key},body:JSON.stringify({model,input:P,tools:[{type:'web_search'}]})});
+      else res=await fetch(pv==='openai'?'https://api.openai.com/v1/chat/completions':'https://openrouter.ai/api/v1/chat/completions',{method:'POST',headers:{...J,authorization:'Bearer '+key},body:JSON.stringify({model,messages:[{role:'user',content:P}],...(find&&pv==='openrouter'?{plugins:[{id:'web'}]}:{})})});
       const data=await res.json().catch(()=>({}));
       if(!res.ok)throw {code:'api',message:(data.error&&(data.error.message||JSON.stringify(data.error)))||('http '+res.status)};
-      if(pv==='anthropic')text=(data.content||[]).map(c=>c.text||'').join('');
+      if(pv==='anthropic')text=(data.content||[]).filter(c=>c.type==='text').map(c=>c.text||'').join('');
       else if(pv==='gemini')text=((data.candidates||[])[0]?.content?.parts||[]).map(c=>c.text||'').join('');
+      else if(pv==='openai'&&find)text=(data.output||[]).filter(o=>o.type==='message').flatMap(o=>o.content||[]).map(c=>c.text||'').join('');
       else text=(data.choices||[])[0]?.message?.content||'';
-      trs=parse(text);
+      trs=find?parseFind(text):parse(text);
     }
-    render();$('st').textContent='done.';
+    render();$('st').textContent='done.'+(find&&work?' detected: '+work.toLowerCase():'');
   }catch(e){
-    $('st').textContent=(e&&e.code==='not_granted')?'translation permission was declined.':(e&&e.code==='api')?'translation failed: '+String(e.message).toLowerCase():'translation failed (network blocked or bad response).';
+    console.error(e,raw);
+    $('st').textContent=(e&&e.code==='not_granted')?'translation permission was declined.'
+      :(e&&e.code==='api')?'translation failed: '+String(e.message).toLowerCase()
+      :phase==='parse'?(raw?'the reply was not valid json: '+raw.replace(/\s+/g,' ').slice(0,160):'the translator returned an empty reply (it may have been blocked or cut off).')
+      :(e instanceof TypeError)?'could not reach the translator (network or cors blocked). check your connection and any content blocker, and use the downloaded html file rather than the published link.'
+      :'translation failed: '+String((e&&e.message)||e).toLowerCase();
   }
   $('go').disabled=false;
 };
@@ -527,6 +547,8 @@ OPTS.concat(SELS).forEach(id=>$(id).addEventListener('change',schedule));
 paintList();
 
 // ---- ui color ----
+$('tmode').value=ls('bh_tmode')||'gen';if(!$('tmode').value)$('tmode').value='gen';
+$('tmode').onchange=()=>ls('bh_tmode',$('tmode').value);
 const PRESETS=['','#4f5bd5','#1f8a8a','#3f7d3a','#c2456b','#8e4fb3','#50607a'];
 function hex2hsl(h){
   const r=parseInt(h.slice(1,3),16)/255,g=parseInt(h.slice(3,5),16)/255,b=parseInt(h.slice(5,7),16)/255;
